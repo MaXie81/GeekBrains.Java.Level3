@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 public class Conn {
     private final String DRIVER = "org.sqlite.JDBC";
-    private final String URL = "jdbc:sqlite:C:\\java\\Test\\8\\ChatServer\\src\\DB\\Logins.db";
+    private final String URL = "jdbc:sqlite:C:\\java\\Core3\\lesson2\\ChatServer\\src\\DB\\Logins.db";
 
     private Connection conn;
 
