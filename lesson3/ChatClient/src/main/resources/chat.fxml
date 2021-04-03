@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.geekbrains.ChatController">
+    <children>
+        <HBox fx:id="authPanel">
+            <TextField fx:id="loginField" promptText="Login" HBox.hgrow="ALWAYS" />
+            <PasswordField fx:id="passField" promptText="password" HBox.hgrow="ALWAYS" />
+            <Button onAction="#btnConnect" text="connect" HBox.hgrow="ALWAYS" />
+        </HBox>
+        <MenuBar fx:id="menuBar" visible="false">
+            <Menu text="File">
+                <MenuItem onAction="#exit" text="Exit" />
+            </Menu>
+        </MenuBar>
+      <HBox fx:id="changePanel" visible="false">
+         <children>
+            <TextField fx:id="newNick" focusTraversable="false" promptText="new nick" />
+            <Button fx:id="btnChangeNick" mnemonicParsing="false" onAction="#btnChange" text="change" />
+         </children>
+      </HBox>
+        <HBox fx:id="chatBox" visible="false" VBox.vgrow="ALWAYS">
+            <TextArea fx:id="chatArea" editable="false" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" />
+            <ListView fx:id="onlineUsers" prefWidth="140.0" />
+            <padding>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+            </padding>
+        </HBox>
+        <HBox fx:id="inputBox" spacing="5.0" visible="false">
+            <TextField fx:id="input" onAction="#pressEnter" prefHeight="80.0" HBox.hgrow="ALWAYS" />
+            <Button fx:id="btnSendMessage" lineSpacing="10.0" mnemonicParsing="false" onAction="#btnSend" prefHeight="80.0" prefWidth="140.0" text="SEND" textFill="#c30909" />
+            <padding>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+            </padding>
+        </HBox>
+
+    </children>
+</VBox>
