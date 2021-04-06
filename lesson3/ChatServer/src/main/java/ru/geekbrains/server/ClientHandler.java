@@ -8,6 +8,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ClientHandler {
     private final String MESS_PREFIX = "ClientPort ";
@@ -23,7 +25,22 @@ public class ClientHandler {
     private void log(MessageDTO mess, boolean flgReceive) {
         log((flgReceive ? "receive " : "send ") + mess.getMessageType());
     }
-        
+
+    private ExecutorService threadService = Executors.newFixedThreadPool(2);
+    private Runnable taskAuthTimeout = new TimerCloseConnection();
+    private Runnable taskAuth = new Runnable() {
+        @Override
+        public void run() {
+            authenticate();
+        }
+    };
+    private Runnable taskReceiveMessage = new Runnable() {
+        @Override
+        public void run() {
+            receiveMessages();
+        }
+    };
+
     public ClientHandler(Socket socket, ChatServer chatServer) {
         try {
             this.chatServer = chatServer;
@@ -32,15 +49,9 @@ public class ClientHandler {
             this.outputStream = new DataOutputStream(socket.getOutputStream());
             log("ClientPort created");
 
-            new Thread(new TimerCloseConnection()).start();
-            new Thread(() -> {
-                try {
-                    authenticate();
-                    receiveMessages();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }).start();
+            threadService.execute(taskAuthTimeout);
+            threadService.execute(taskAuth);
+            threadService.execute(taskReceiveMessage);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -73,7 +84,7 @@ public class ClientHandler {
             closeHandler();
         }
     }
-    private void receiveMessages() throws IOException {
+    private void receiveMessages() {
         try {
             while (!Thread.currentThread().isInterrupted() || socket.isConnected()) {
                 String msg = inputStream.readUTF();

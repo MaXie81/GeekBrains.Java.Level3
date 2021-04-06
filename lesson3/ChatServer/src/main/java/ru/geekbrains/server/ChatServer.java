@@ -71,12 +71,6 @@ public class ChatServer {
         }
     }
 
-//    public synchronized boolean isUserBusy(String username) {
-//        for (ClientHandler clientHandler : onlineClientsList) {
-//            if (clientHandler.getCurrentUserName().equals(username)) return true;
-//        }
-//        return false;
-//    }
     public synchronized boolean isUserBusy(int id) {
         for (ClientHandler clientHandler : onlineClientsList) {
             if (clientHandler.getId() == id) return true;
