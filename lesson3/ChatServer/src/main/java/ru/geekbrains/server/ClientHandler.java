@@ -1,5 +1,7 @@
 package ru.geekbrains.server;
 
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import ru.geekbrains.messages.MessageDTO;
 import ru.geekbrains.messages.MessageType;
 
@@ -11,8 +13,9 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+@Slf4j
 public class ClientHandler {
-    private final String MESS_PREFIX = "ClientPort ";
+    private String MESS_PREFIX;
     private Socket socket;
     private DataOutputStream outputStream;
     private DataInputStream inputStream;
@@ -20,23 +23,33 @@ public class ClientHandler {
     private int id = -1;
     private String currentUserName = "";
     private MessDTO mess = new MessDTO();
+    @Getter
+    private int port;
 
-    private void log(String logStr) {System.out.println(MESS_PREFIX + socket.getPort() + " > " +logStr);}
-    private void log(MessageDTO mess, boolean flgReceive) {
-        log((flgReceive ? "receive " : "send ") + mess.getMessageType());
+    private void logMess(MessageDTO mess, boolean flgReceive) {
+        String str = MESS_PREFIX + (flgReceive ? "< " : "> ");
+        if (mess.getMessageType() == MessageType.ERROR_MESSAGE) {
+            log.error(str  + mess.getMessageType());
+            log.debug(str + mess.getBody());
+        } else if (mess.getMessageType() == MessageType.DISCONNECT_MESSAGE) {
+            log.debug(str  + mess.getMessageType());
+            log.debug(str + mess.getBody());
+        } else if (mess.getMessageType() == MessageType.AUTH_CONFIRM) {
+            log.debug(str  + mess.getMessageType());
+            log.debug(str + mess.getBody());
+        } else if (mess.getMessageType() == MessageType.PUBLIC_MESSAGE || mess.getMessageType() == MessageType.PRIVATE_MESSAGE){
+            log.debug(str  + mess.getMessageType());
+            log.trace(str + mess.getBody());
+        } else
+            log.debug(str  + mess.getMessageType());
     }
 
     private ExecutorService threadService = Executors.newFixedThreadPool(2);
     private Runnable taskAuthTimeout = new TimerCloseConnection();
-    private Runnable taskAuth = new Runnable() {
+    private Runnable taskRun = new Runnable() {
         @Override
         public void run() {
             authenticate();
-        }
-    };
-    private Runnable taskReceiveMessage = new Runnable() {
-        @Override
-        public void run() {
             receiveMessages();
         }
     };
@@ -47,11 +60,13 @@ public class ClientHandler {
             this.socket = socket;
             this.inputStream = new DataInputStream(socket.getInputStream());
             this.outputStream = new DataOutputStream(socket.getOutputStream());
-            log("ClientPort created");
+            this.port = socket.getPort();
+            this.MESS_PREFIX = "ClientPort " + port + " ";
+
+            log.info(MESS_PREFIX + "> created");
 
             threadService.execute(taskAuthTimeout);
-            threadService.execute(taskAuth);
-            threadService.execute(taskReceiveMessage);
+            threadService.execute(taskRun);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -59,13 +74,13 @@ public class ClientHandler {
     }
 
     private void authenticate() {
-        log("Waiting for authentication...");
+        log.trace(MESS_PREFIX + "> waiting for authentication...");
         try {
             while (true) {
                 String authMessage = inputStream.readUTF();
                 MessageDTO dto = MessageDTO.convertFromJson(authMessage);
                 
-                log(dto, true);
+                logMess(dto, true);
                 
                 if (dto.getMessageType() != MessageType.SEND_AUTH_MESSAGE) {
                     sendMessage(mess.getError("Error message type! Receive: " + dto.getMessageType()));
@@ -90,10 +105,7 @@ public class ClientHandler {
                 String msg = inputStream.readUTF();
                 MessageDTO dto = MessageDTO.convertFromJson(msg);
 
-                log(dto, true);
-                if (dto.getMessageType() == MessageType.DISCONNECT_MESSAGE) {
-                    log(dto.getBody());
-                }
+                logMess(dto, true);
                 mess.set(dto);
             }
         } catch (IOException e) {
@@ -104,7 +116,7 @@ public class ClientHandler {
     }
     public void sendMessage(MessageDTO dto) {
         try {
-            log(dto, false);
+            logMess(dto, false);
             outputStream.writeUTF(dto.convertToJson());
         } catch (IOException e) {
             e.printStackTrace();
@@ -118,12 +130,12 @@ public class ClientHandler {
     synchronized public void closeHandler() {
         try {
             if (socket.isClosed()) return;
-            chatServer.unsubscribe(this);
             outputStream.flush();
             outputStream.close();
             inputStream.close();
             socket.close();
-            log("Connection closed");
+            log.info(MESS_PREFIX + "> closed");
+            chatServer.unsubscribe(this);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -162,6 +174,7 @@ public class ClientHandler {
             } else {
                 ru.geekbrains.server.ClientHandler.this.id = id;
                 ru.geekbrains.server.ClientHandler.this.currentUserName = chatServer.getLoginRepository().getNickById(id);
+                log.info(MESS_PREFIX + "> authorized");
                 sendMessage(mess.getAuth());
             }
         }

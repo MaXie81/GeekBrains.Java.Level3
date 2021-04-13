@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration xmlns="http://logging.apache.org/log4j/2.0/config">
+    <Properties>
+        <Property name="basePath">ChatServer/logs</Property>
+    </Properties>
+
+    <Appenders>
+        <File name="FILE_SERVER" fileName="${basePath}/Server.log" append="true">
+            <PatternLayout pattern="%-5p %d{dd.MM.yyyy HH:mm:ss} - %m%n" />
+        </File>
+        <File name="FILE_CLIENT" fileName="${basePath}/Client.log" append="true">
+            <PatternLayout pattern="%-5p %d{dd.MM.yyyy HH:mm:ss} - %m%n" />
+        </File>
+
+        <Console name="STDOUT" target="SYSTEM_OUT" >
+            <PatternLayout pattern="%-5p %d{dd.MM.yyyy HH:mm:ss} (%F:%L) - %m%n" />
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Root level="all">
+            <AppenderRef ref="STDOUT" />
+        </Root>
+        <Logger name="ru.geekbrains.server.ChatServer" level="debug">
+            <AppenderRef ref="STDOUT" />
+        </Logger>
+        <Logger name="ru.geekbrains.server.ChatServer" level="info">
+            <AppenderRef ref="FILE_SERVER" />
+        </Logger>
+        <Logger name="ru.geekbrains.server.ClientHandler" level="debug">
+            <AppenderRef ref="STDOUT" />
+        </Logger>
+        <Logger name="ru.geekbrains.server.ClientHandler" level="info">
+            <AppenderRef ref="FILE_CLIENT" />
+        </Logger>
+    </Loggers>
+</Configuration>

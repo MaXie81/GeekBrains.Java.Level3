@@ -1,5 +1,6 @@
 package ru.geekbrains.server;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.geekbrains.messages.MessageDTO;
 
 import java.io.IOException;
@@ -7,26 +8,22 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
-
+@Slf4j
 public class ChatServer {
-    private static final String MESS_PREFIX = "Server > ";
+    private static final String MESS_PREFIX = "Server ";
     private static final int PORT = 65500;
     private List<ClientHandler> onlineClientsList;
     private LoginRepository loginRepository;
 
-    private static void log(String log_str) {
-        System.out.println(MESS_PREFIX + log_str);
-    }
-    
     public ChatServer() {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            log("Server started");
+            log.info(MESS_PREFIX + "> started");
             loginRepository = new LoginRepository();
             onlineClientsList = new LinkedList<>();
             while (true) {
-                log("Waiting for connection...");
+                log.trace(MESS_PREFIX + "> Waiting for connection...");
                 Socket socket = serverSocket.accept();
-                log("Client from port " + socket.getPort() + " connected");
+                log.info(MESS_PREFIX + "< Client from port " + socket.getPort() + " connected");
                 new ClientHandler(socket, this);
             }
         } catch (IOException e) {
@@ -40,7 +37,9 @@ public class ChatServer {
     }
 
     public synchronized void unsubscribe(ClientHandler c) {
-        if (onlineClientsList.remove(c)) broadcastOnlineClients();
+        if (onlineClientsList.remove(c))
+            broadcastOnlineClients();
+        log.info(MESS_PREFIX + "< Client from port " + c.getPort() + " disconnected");
     }
 
     public LoginRepository getLoginRepository() {
