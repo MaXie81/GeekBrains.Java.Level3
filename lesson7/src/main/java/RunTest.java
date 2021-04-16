@@ -32,7 +32,7 @@ public class RunTest {
 
         for (Map.Entry pairPriorityMethods : mapMethod.entrySet()) {
             for (Method method : (List<Method>) pairPriorityMethods.getValue() ) {
-                method.invoke(constructor.newInstance());
+                method.invoke(obj);
             }
         }
     }
